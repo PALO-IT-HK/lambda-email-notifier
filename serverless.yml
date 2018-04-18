@@ -15,7 +15,15 @@ functions:
     description: Retrieve Top Usage Data from API
     events:
       - http: GET fetchTopUsageData
-
+  sendEmail:
+    handler: api/sendEmail.handler
+    memorySize: 128
+    description: Send email containing dashboard data to email address
+    events:
+      - http:
+          path: sendEmail
+          method: post
+          cors: true
 #package:
 #  include:
 #    - include-me.js

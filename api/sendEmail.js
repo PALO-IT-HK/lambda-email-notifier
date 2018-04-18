@@ -1,7 +1,7 @@
 const aws = require('aws')
 const ses = new aws.SES({ region: 'eu-west-1' })
 
-module.exports.sendEmailToStaff = (event, context) => {
+module.exports.handler = (event, context) => {
   let params = {
     Destination: {
       ToAddresses: [
