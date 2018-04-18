@@ -4,6 +4,7 @@
   "description": "Dashboard Lambda that fetches data and sends email",
   "main": "/api/dashboard.js",
   "dependencies": {
+    "aws": "0.0.3-2",
     "node-fetch": "^2.1.2"
   },
   "devDependencies": {},

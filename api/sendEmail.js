@@ -24,12 +24,12 @@ module.exports.handler = (event, context) => {
     ReplyToAddresses: [], 
     ReturnPath: "", 
     ReturnPathArn: "", 
-    Source: "elnathan.erh@gmail.com", 
+    Source: "eerh@palo-it.com", 
     SourceArn: ""
   }
 
   ses.sendEmail(params, (err, data) => {
     if (err) console.log(err)
-    else context.succeed(event)
+    else context.succeed(data.msg)
   })
 }
