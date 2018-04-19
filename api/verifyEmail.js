@@ -2,6 +2,13 @@ const aws = require('aws-sdk');
 
 const ses = new aws.SES({ region: 'us-east-1' });
 
+const corsHeaders = {
+  'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Methods': 'POST',
+};
+
 function listSESIdentities() {
   return new Promise((resolve, reject) => {
     ses.listIdentities({
@@ -68,6 +75,9 @@ function handler(event, context, callback) {
       if (emailStatus === 'Success') {
         callback(null, {
           statusCode: 400,
+          headers: {
+            ...corsHeaders,
+          },
           body: JSON.stringify({
             status: 'failed',
             msg: 'email has already verified',
@@ -79,6 +89,9 @@ function handler(event, context, callback) {
         console.log({data});
         callback(null, {
           statusCode: 202,
+          headers: {
+            ...corsHeaders,
+          },
           body: JSON.stringify({
             status: 'accepted',
             msg: 'adding user to SES and sending verification email',
@@ -90,6 +103,9 @@ function handler(event, context, callback) {
       console.log({ err });
       callback(null, {
         statusCode: 500,
+        headers: {
+          ...corsHeaders,
+        },
         body: JSON.stringify({
           status: 'failed',
           msg: 'unknown error occurred',
