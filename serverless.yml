@@ -19,6 +19,16 @@ functions:
       - http:
           method: get
           path: /fetchDataAndSendEmail
+  sendEmail:
+    handler: api/index.sendEmail
+    memorySize: 128
+    timeout: 20
+    description: Send email with data fetched from API to email address
+    events:
+      - http:
+          method: post
+          path: /sendEmail
+          cors: true
   verifyEmail:
     handler: api/index.verifyEmail
     memorySize: 128
@@ -48,6 +58,8 @@ resources:
                     - logs:PutLogEvents
                     - logs:DescribeLogStreams
                     - ses:SendEmail
+                    - ses:ListIdentities
+                    - ses:VerifyEmailIdentity
                   Resource: "*"
         AssumeRolePolicyDocument:
           Statement:

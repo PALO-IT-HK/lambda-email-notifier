@@ -4,6 +4,7 @@ const fetch = require('node-fetch');
 const aws = require('aws-sdk');
 
 const ses = new aws.SES({ region: 'us-east-1' });
+const lambda = new aws.Lambda();
 
 module.exports.fetchTopUsageDataAndSendEmail = (event, context, callback) => {
   // todo handle date range
@@ -25,82 +26,85 @@ module.exports.fetchTopUsageDataAndSendEmail = (event, context, callback) => {
           data: json,
         };
         // callback(null, JSON.stringify(result.data))
-        const dataToSend =
-        [
-          `<table>
-            <tr>
-              <th>Station Name</th>
-              <th>District</th>
-              <th>Total Bikes Count</th>
-              <th>Total Bikes Out</th>
-              <th>Total Bikes In</th>
-            </tr>`,
-          result.data.map(station =>
-            `
-              <tr>
-                <td>${station.location}</td>
-                <td>${station.district}</td>
-                <td>${station.totalBikesCount}</td>
-                <td>${station.totalBikesOut}</td>
-                <td>${station.totalBikesIn}</td>
-              </tr>
-              `).join(''),
-          '</table>',
-        ].join('');
 
-        // Get email list
-        // Define Email Params
-        const params = {
-          Destination: {
-            ToAddresses: [
-              'elnathan.erh@gmail.com',
-            ],
-          },
-          Message: {
-            Body: {
-              Html: {
-                Data: dataToSend,
-                Charset: 'UTF-8',
-              },
-              Text: {
-                Data: dataToSend,
-                Charset: 'UTF-8',
-              },
-            },
-            Subject: {
-              Data: 'Top 5 Stations in London for today',
-              Charset: 'UTF-8',
-            },
-          },
-          Source: 'eerh@palo-it.com',
-          Tags: [
-            {
-              Name: 'Send_individual_email',
-              Value: 'email1',
-            },
-          ],
+        const identityParams = {
+          IdentityType: 'EmailAddress',
+          MaxItems: 123,
+          NextToken: '',
         };
 
-        // Send the email
-        ses.sendEmail(params, (err, data) => {
+        // Get the list of identities from SES
+        ses.listIdentities(identityParams, (err, data) => {
           if (err) {
-            console.log(err);
             return callback(null, {
               statusCode: 500,
               body: JSON.stringify({
                 status: 'failed',
-                msg: 'error from sending email',
-              }),
-            });
+                msg: 'Error from calling SES ListIdentities: ' + err
+              })
+            })
           }
-          console.log(data);
-          return callback(null, {
-            statusCode: 200,
-            body: JSON.stringify({
-              status: 'success',
-              msg: 'Email Sent Successfully',
-            }),
-          });
+          else {
+            // Filter source email (eerh@palo-it.com) out from the list
+            const filteredEmailList = data.Identities.filter(email => email !== 'eerh@palo-it.com')
+            const emailObject = {
+              dataToSend:         
+                [
+                  `<table>
+                    <tr>
+                      <th>Station Name</th>
+                      <th>District</th>
+                      <th>Total Bikes Count</th>
+                      <th>Total Bikes Out</th>
+                      <th>Total Bikes In</th>
+                    </tr>`,
+                  result.data.map(station =>
+                    `
+                      <tr>
+                        <td>${station.location}</td>
+                        <td>${station.district}</td>
+                        <td>${station.totalBikesCount}</td>
+                        <td>${station.totalBikesOut}</td>
+                        <td>${station.totalBikesIn}</td>
+                      </tr>
+                      `).join(''),
+                  '</table>',
+                ].join(''),
+            }
+            filteredEmailList.forEach(email => {
+              const payload = {
+                dataToSend: emailObject.dataToSend,
+                email: email
+              }
+              const sendEmailLambdaParams = {
+                FunctionName: 'dashboard-dev-sendEmail', // the lambda function we are going to invoke
+                InvocationType: 'RequestResponse',
+                LogType: 'Tail',
+                Payload: JSON.stringify(payload)
+              }
+
+              lambda.invoke(sendEmailLambdaParams, (err, data) => {
+                if(err) {
+                  return callback(null, {
+                    statusCode: 500,
+                    body: JSON.stringify({
+                      status: 'failed',
+                      msg: 'Invoke sendEmail Lambda error: ' + err
+                    })
+                  })
+                }
+                else {
+                  return callback(null, {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                      status: 'success',
+                      msg: 'Invoke sendEmail Lambda successful'
+                    })
+                  })
+                }
+              }) // lambda.invoke closing brackets
+            }) // forEach closing brackets
+          }
         });
       });
     })
