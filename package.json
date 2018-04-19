@@ -1,14 +1,28 @@
 {
   "name": "lambda-email-notifier",
+  "private": true,
   "version": "1.0.0",
   "description": "Dashboard Lambda that fetches data and sends email",
-  "main": "/api/dashboard.js",
+  "main": "/api/index.js",
   "dependencies": {
-    "aws-sdk": "^2.224.1",
     "node-fetch": "^2.1.2"
   },
-  "devDependencies": {},
+  "peerDependencies": {
+    "aws-sdk": "^2.224.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-mocha": "^5.0.0",
+    "eslint-plugin-react": "^7.7.0",
+    "json": "^9.0.6",
+    "rimraf": "^2.6.2",
+    "serverless": "^1.26.1"
+  },
   "scripts": {
+    "deploy": "rimraf .tmp && sh tools/serverless.sh deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
