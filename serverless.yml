@@ -13,7 +13,7 @@ functions:
   retrieveDashboardData:
     handler: api/index.fetchTopUsageDataAndSendEmail
     memorySize: 256
-    timeout: 300
+    timeout: 30
     description: Retrieve Top Usage Data from API
     events:
       - http:
@@ -48,6 +48,9 @@ resources:
                     - logs:PutLogEvents
                     - logs:DescribeLogStreams
                     - ses:SendEmail
+                    - ses:ListIdentities
+                    - ses:GetIdentityVerificationAttributes
+                    - ses:VerifyEmailIdentity
                   Resource: "*"
         AssumeRolePolicyDocument:
           Statement:

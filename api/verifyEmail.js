@@ -2,37 +2,100 @@ const aws = require('aws-sdk');
 
 const ses = new aws.SES({ region: 'us-east-1' });
 
-module.exports.handler = (event, context, callback) => {
-  const identityParams = {
-    IdentityType: 'EmailAddress',
-    MaxItems: 123,
-    NextToken: '',
-  };
-
-  // List all the identities in SES
-  ses.listIdentities(identityParams, (err, data) => {
-    if (err) console.log(err, err.stack);
-    else {
-      // Check if email passed from frontend already exists
-      const identitiesArray = data.Identities;
-      const emailAddress = event.email;
-      const filteredResult = identitiesArray.filter(email => email === emailAddress);
-
-      // If email does not exist in SES, send to SES for verification
-      if (filteredResult.length === 0) {
-        const params = {
-          EmailAddress: event.email,
-        };
-        ses.verifyEmailIdentity(params, (err, data) => {
-          if (err) console.log(err, err.stack);
-          else {
-            callback(null, {
-              statusCode: 200,
-              body: data,
-            });
-          }
-        });
+function listSESIdentities() {
+  return new Promise((resolve, reject) => {
+    ses.listIdentities({
+      IdentityType: 'EmailAddress',
+      MaxItems: 1000,
+      NextToken: '',
+    }, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
       }
-    }
+    });
   });
+}
+
+function getSESIdentifyVerificationAttributes(email) {
+  return new Promise((resolve, reject) => {
+    ses.getIdentityVerificationAttributes({
+      Identities: [email],
+    }, (err, data) => {
+      if (err) {
+        reject(err);
+      } else if (data.VerificationAttributes[email]) {
+        resolve(data.VerificationAttributes[email].VerificationStatus); // 'Success' for verified, 'Pending' / 'Failed' for unverified email
+      } else {
+        resolve(undefined);
+      }
+    });
+  });
+}
+
+function verifyEmailIdentity(email) {
+  return new Promise((resolve, reject) => {
+    ses.verifyEmailIdentity({
+      EmailAddress: email,
+    }, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
+function handler(event, context, callback) {
+  console.log(event.body);
+  const emailToVerify = event.body.email;
+
+  listSESIdentities()
+    .then((emailList) => {
+      if (emailList.Identities.find(email => email === emailToVerify)) {
+        return getSESIdentifyVerificationAttributes(emailToVerify);
+      }
+      return 'Not Found';
+    })
+    .then((emailStatus) => {
+      if (emailStatus === 'Success') {
+        callback(null, {
+          statusCode: 400,
+          body: JSON.stringify({
+            status: 'failed',
+            msg: 'email has already verified',
+          }),
+        });
+        return Promise.resolve();
+      }
+      return verifyEmailIdentity(emailToVerify).then((data) => {
+        console.log({data});
+        callback(null, {
+          statusCode: 202,
+          body: JSON.stringify({
+            status: 'accepted',
+            msg: 'adding user to SES and sending verification email',
+          }),
+        });
+      });
+    })
+    .catch((err) => {
+      console.log({ err });
+      callback(null, {
+        statusCode: 500,
+        body: JSON.stringify({
+          status: 'failed',
+          msg: 'unknown error occurred',
+        }),
+      });
+    });
+}
+
+
+module.exports = {
+  listSESIdentities,
+  getSESIdentifyVerificationAttributes,
+  handler,
 };
