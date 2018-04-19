@@ -1,22 +1,31 @@
 'use strict';
-const fetch = require('node-fetch')
-const aws = require('aws-sdk')
-const ses = new aws.SES({ region: 'us-east-1' })
+
+const fetch = require('node-fetch');
+const aws = require('aws-sdk');
+
+const ses = new aws.SES({ region: 'us-east-1' });
 
 module.exports.fetchTopUsageDataAndSendEmail = (event, context, callback) => {
+  // todo handle date range
   fetch('https://api.ci.palo-it-hk.com/usages/top-usage/5/type/total/daterange/20170410/20170411')
-    .then(response => {
+    .then((response) => {
       if (response.status !== 200) {
-        console.log('Looks like there was a problem. Status Code: ' + response.status)
-        return
+        console.log(`Looks like there was a problem. Status Code: ${response.status}`);
+        return callback(null, {
+          statusCode: 500,
+          body: JSON.stringify({
+            status: 'failed',
+            msg: 'error from upstream api',
+          }),
+        });
       }
-      response.json().then(json => {
+      return response.json().then((json) => {
         const result = {
           statusCode: 200,
-          data: json
-        }
+          data: json,
+        };
         // callback(null, JSON.stringify(result.data))
-        const dataToSend = 
+        const dataToSend =
         [
           `<table>
             <tr>
@@ -26,8 +35,8 @@ module.exports.fetchTopUsageDataAndSendEmail = (event, context, callback) => {
               <th>Total Bikes Out</th>
               <th>Total Bikes In</th>
             </tr>`,
-            result.data.map(station =>   
-              `
+          result.data.map(station =>
+            `
               <tr>
                 <td>${station.location}</td>
                 <td>${station.district}</td>
@@ -35,54 +44,74 @@ module.exports.fetchTopUsageDataAndSendEmail = (event, context, callback) => {
                 <td>${station.totalBikesOut}</td>
                 <td>${station.totalBikesIn}</td>
               </tr>
-              `
-            ).join(''),
-            `</table>`
-        ].join('')
-        
+              `).join(''),
+          '</table>',
+        ].join('');
+
+        // Get email list
         // Define Email Params
-        let params = {
+        const params = {
           Destination: {
             ToAddresses: [
-              "elnathan.erh@gmail.com",
-            ]
-          }, 
+              'elnathan.erh@gmail.com',
+            ],
+          },
           Message: {
             Body: {
               Html: {
                 Data: dataToSend,
-                Charset: "UTF-8"
+                Charset: 'UTF-8',
               },
               Text: {
                 Data: dataToSend,
-                Charset: "UTF-8"
-              }
-            }, 
+                Charset: 'UTF-8',
+              },
+            },
             Subject: {
-              Data: "Top 5 Stations in London for today",
-              Charset: "UTF-8"
-            }
-          }, 
-          Source: "eerh@palo-it.com", 
+              Data: 'Top 5 Stations in London for today',
+              Charset: 'UTF-8',
+            },
+          },
+          Source: 'eerh@palo-it.com',
           Tags: [
             {
               Name: 'Send_individual_email',
-              Value: 'email1'
-            }
-          ]
-        }
-        
+              Value: 'email1',
+            },
+          ],
+        };
+
         // Send the email
         ses.sendEmail(params, (err, data) => {
-          if (err) console.log(err)
-          else { 
-            context.succeed(data.msg)
-            callback(null, 'Email Sent Successfully')
+          if (err) {
+            console.log(err);
+            return callback(null, {
+              statusCode: 500,
+              body: JSON.stringify({
+                status: 'failed',
+                msg: 'error from sending email',
+              }),
+            });
           }
-        })
-      })
+          console.log(data);
+          return callback(null, {
+            statusCode: 200,
+            body: JSON.stringify({
+              status: 'success',
+              msg: 'Email Sent Successfully',
+            }),
+          });
+        });
+      });
     })
-    .catch(err => {
-      console.log('Error: ' + err)
-    })
-}
+    .catch((err) => {
+      console.log(`Error: ${err}`);
+      return callback(null, {
+        statusCode: 500,
+        body: JSON.stringify({
+          status: 'failed',
+          msg: 'unknown error occurred',
+        }),
+      });
+    });
+};
