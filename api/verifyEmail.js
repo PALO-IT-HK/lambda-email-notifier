@@ -74,10 +74,10 @@ function handler(event, context, callback) {
     .then((emailStatus) => {
       if (emailStatus === 'Success') {
         callback(null, {
-          statusCode: 400,
+          statusCode: 200,
           headers: corsHeaders,
           body: JSON.stringify({
-            status: 'failed',
+            status: 'success',
             msg: 'email has already verified',
           }),
         });
