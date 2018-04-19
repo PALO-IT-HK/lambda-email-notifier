@@ -2,6 +2,10 @@ service: dashboard
 
 frameworkVersion: ">=1.1.0 <2.0.0"
 
+cors: &cors
+  origin: '*'
+  allowCredentials: true
+
 provider:
   name: aws
   runtime: nodejs6.10
@@ -28,7 +32,7 @@ functions:
       - http:
           method: post
           path: /sendEmail
-          cors: true
+          cors: *cors
   verifyEmail:
     handler: api/index.verifyEmail
     memorySize: 128
@@ -38,10 +42,30 @@ functions:
       - http:
           method: post
           path: /verifyEmail
-          cors: true
+          cors: *cors
 
 resources:
   Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-aws-authorizer'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST,PUT'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-aws-authorizer'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST,PUT'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
     clpPrototypeRole:
       Type: AWS::IAM::Role
       Properties:
