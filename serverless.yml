@@ -10,27 +10,27 @@ provider:
 
 functions:
   retrieveDashboardData:
-    handler: api/dashboard.fetchTopUsageData
+    handler: api/dashboard.fetchTopUsageDataAndSendEmail
     memorySize: 256
     description: Retrieve Top Usage Data from API
     events:
-      - http: GET fetchTopUsageData
-  sendEmail:
-    handler: api/sendEmail.handler
+      - http:
+          method: get
+          path: fetchDataAndSendEmail
+  verifyEmail:
+    handler: api/verifyEmail.handler
     memorySize: 128
-    description: Send email containing dashboard data to email address
+    description: Send email to SES and trigger verification process
     events:
       - http:
           method: post
-          path: sendEmail
+          path: verifyEmail
           cors: true
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
+
+package:
+  individually: true
+  exclude:
+    - node_modules/**
 
 #  iamRoleStatements:
 #    - Effect: "Allow"
