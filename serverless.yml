@@ -4,49 +4,56 @@ frameworkVersion: ">=1.1.0 <2.0.0"
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs6.10
   stage: dev
   region: us-east-1
+  role: clpPrototypeRole
 
 functions:
   retrieveDashboardData:
-    handler: api/dashboard.fetchTopUsageDataAndSendEmail
+    handler: api/index.fetchTopUsageDataAndSendEmail
     memorySize: 256
+    timeout: 300
     description: Retrieve Top Usage Data from API
     events:
       - http:
           method: get
-          path: fetchDataAndSendEmail
+          path: /fetchDataAndSendEmail
   verifyEmail:
-    handler: api/verifyEmail.handler
+    handler: api/index.verifyEmail
     memorySize: 128
+    timeout: 30
     description: Send email to SES and trigger verification process
     events:
       - http:
           method: post
-          path: verifyEmail
+          path: /verifyEmail
           cors: true
 
-package:
-  individually: true
-  exclude:
-    - node_modules/**
-
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
-# env variables if needed
-#  environment:
-#    variable1: value1
+resources:
+  Resources:
+    clpPrototypeRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: clp-prototype-role-dev
+        Policies:
+          - PolicyName: clp-prototype-fullstack-policy-dev
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                    - logs:DescribeLogStreams
+                    - ses:SendEmail
+                  Resource: "*"
+        AssumeRolePolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
