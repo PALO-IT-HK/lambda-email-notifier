@@ -59,10 +59,7 @@ resources:
                     - logs:DescribeLogStreams
                     - ses:SendEmail
                     - ses:ListIdentities
-<<<<<<< HEAD
                     - ses:GetIdentityVerificationAttributes
-=======
->>>>>>> master
                     - ses:VerifyEmailIdentity
                   Resource: "*"
         AssumeRolePolicyDocument:
