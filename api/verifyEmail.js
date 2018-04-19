@@ -49,8 +49,13 @@ function verifyEmailIdentity(email) {
 }
 
 function handler(event, context, callback) {
-  console.log(event.body);
-  const emailToVerify = event.body.email;
+  const requestBody = JSON.parse(event.body);
+  const emailToVerify = requestBody.email;
+
+  console.log({
+    body: requestBody,
+    emailToVerify,
+  });
 
   listSESIdentities()
     .then((emailList) => {
