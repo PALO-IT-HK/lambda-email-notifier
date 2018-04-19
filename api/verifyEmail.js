@@ -75,9 +75,7 @@ function handler(event, context, callback) {
       if (emailStatus === 'Success') {
         callback(null, {
           statusCode: 400,
-          headers: {
-            ...corsHeaders,
-          },
+          headers: corsHeaders,
           body: JSON.stringify({
             status: 'failed',
             msg: 'email has already verified',
@@ -89,9 +87,7 @@ function handler(event, context, callback) {
         console.log({data});
         callback(null, {
           statusCode: 202,
-          headers: {
-            ...corsHeaders,
-          },
+          headers: corsHeaders,
           body: JSON.stringify({
             status: 'accepted',
             msg: 'adding user to SES and sending verification email',
@@ -103,9 +99,7 @@ function handler(event, context, callback) {
       console.log({ err });
       callback(null, {
         statusCode: 500,
-        headers: {
-          ...corsHeaders,
-        },
+        headers: corsHeaders,
         body: JSON.stringify({
           status: 'failed',
           msg: 'unknown error occurred',
