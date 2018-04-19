@@ -1,31 +1,36 @@
-const aws = require('aws')
-const ses = new aws.SES({ region: 'eu-west-1' })
+const aws = require('aws-sdk')
+const ses = new aws.SES({ region: 'us-east-1' })
 
 module.exports.handler = (event, context) => {
   let params = {
     Destination: {
       ToAddresses: [
-        "eerh@palo-it.com", 
-        "elnathan.erh@gmail.com"
+        "elnathan.erh@gmail.com",
       ]
     }, 
     Message: {
       Body: {
+        Html: {
+          Data: "This is the message body in Html format.",
+          Charset: "UTF-8"
+        },
         Text: {
-          Charset: "UTF-8", 
-          Data: "This is the message body in text format."
+          Data: "This is the message body in text format.",
+          Charset: "UTF-8"
         }
       }, 
       Subject: {
-        Charset: "UTF-8", 
-        Data: "Top 5 Stations in London for today"
+        Data: "Top 5 Stations in London for today",
+        Charset: "UTF-8"
       }
     }, 
-    ReplyToAddresses: [], 
-    ReturnPath: "", 
-    ReturnPathArn: "", 
     Source: "eerh@palo-it.com", 
-    SourceArn: ""
+    Tags: [
+      {
+        Name: 'Send_individual_email',
+        Value: 'email1'
+      }
+    ]
   }
 
   ses.sendEmail(params, (err, data) => {

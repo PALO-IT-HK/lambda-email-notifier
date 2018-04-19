@@ -21,8 +21,8 @@ functions:
     description: Send email containing dashboard data to email address
     events:
       - http:
-          path: sendEmail
           method: post
+          path: sendEmail
           cors: true
 #package:
 #  include:
