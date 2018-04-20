@@ -2,6 +2,7 @@
 
 const fetch = require('node-fetch');
 const aws = require('aws-sdk');
+const moment = require('moment');
 
 const ses = new aws.SES({ region: 'us-east-1' });
 const lambda = new aws.Lambda();
@@ -58,9 +59,11 @@ function sendEmailLambda(functionName, payload) {
 }
 
 function buildEmail(data) {
+  const today = moment().subtract(1, 'year').format('YYYYMMDD');
   const emailObject = {
     dataToSend:
       [
+        `<h3>Daily Top 5 Summary - ${today}<h3>`,
         `<table>
                     <tr>
                       <th>Station Name</th>
@@ -88,7 +91,8 @@ function buildEmail(data) {
 
 module.exports.fetchTopUsageDataAndSendEmail = (event, context, callback) => {
   // todo handle date range
-  fetch('https://api.ci.palo-it-hk.com/usages/top-usage/5/type/total/daterange/20170410/20170411')
+  const today = moment().subtract(1, 'year').format('YYYYMMDD');
+  fetch(`https://api.ci.palo-it-hk.com/usages/top-usage/5/type/total/daterange/${today}/${today}`)
     .then((response) => {
       if (response.status !== 200) {
         console.log(`Looks like there was a problem. Status Code: ${response.status}`);

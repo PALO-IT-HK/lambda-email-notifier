@@ -5,6 +5,7 @@
   "description": "Dashboard Lambda that fetches data and sends email",
   "main": "/api/index.js",
   "dependencies": {
+    "moment": "^2.22.1",
     "node-fetch": "^2.1.2"
   },
   "devDependencies": {
