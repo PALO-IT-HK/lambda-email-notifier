@@ -63,7 +63,7 @@ function buildEmail(data) {
   const emailObject = {
     dataToSend:
       [
-        `<h3>Daily Top 5 Summary - ${today}<h3>`,
+        `<h3>Daily Top 5 Summary - ${today}</h3>`,
         `<table>
                     <tr>
                       <th>Station Name</th>

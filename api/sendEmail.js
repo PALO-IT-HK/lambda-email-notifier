@@ -1,8 +1,11 @@
 const aws = require('aws-sdk');
+const moment = require('moment');
 
 const ses = new aws.SES({ region: 'us-east-1' });
 
 function sesSendEmail(eventObject) {
+  const today = moment().subtract(1, 'year').format('YYYYMMDD');
+
   return new Promise((resolve, reject) => {
     const param = {
       Destination: {
@@ -22,7 +25,7 @@ function sesSendEmail(eventObject) {
           },
         },
         Subject: {
-          Data: 'Top 5 Stations in London for today',
+          Data: `Top 5 Stations in London - ${today}`,
           Charset: 'UTF-8',
         },
       },
