@@ -4,41 +4,38 @@ const ses = new aws.SES({ region: 'us-east-1' });
 
 function sesSendEmail(eventObject) {
   return new Promise((resolve, reject) => {
-    ses.sendEmail(
-      {
-        Destination: {
-          ToAddresses: [
-            eventObject.email,
-          ],
-        },
-        Message: {
-          Body: {
-            Html: {
-              Data: eventObject.dataToSend,
-              Charset: 'UTF-8',
-            },
-            Text: {
-              Data: eventObject.dataToSend,
-              Charset: 'UTF-8',
-            },
+    const param = {
+      Destination: {
+        ToAddresses: [
+          eventObject.email,
+        ],
+      },
+      Message: {
+        Body: {
+          Html: {
+            Data: eventObject.dataToSend,
+            Charset: 'UTF-8',
           },
-          Subject: {
-            Data: 'Top 5 Stations in London for today',
+          Text: {
+            Data: eventObject.dataToSend,
             Charset: 'UTF-8',
           },
         },
-        Source: 'eerh@palo-it.com',
-        Tags: [
-          {
-            Name: 'Send_individual_email',
-            Value: 'email1',
-          },
-        ],
+        Subject: {
+          Data: 'Top 5 Stations in London for today',
+          Charset: 'UTF-8',
+        },
       },
-      (err, data) => {
-        err ? reject(err) : resolve(data);
-      },
-    );
+      Source: 'eerh@palo-it.com',
+      Tags: [
+        {
+          Name: 'Send_individual_email',
+          Value: 'email1',
+        },
+      ],
+    };
+
+    ses.sendEmail(param, (err, data) => { err ? reject(err) : resolve(data); });
   });
 }
 
